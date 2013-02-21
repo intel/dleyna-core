@@ -25,7 +25,9 @@
 
 #include "connector.h"
 
-int dleyna_main_loop_start(char *server, gpointer user_data);
+int dleyna_main_loop_start(char *server,
+			   const dleyna_control_point_t *control_point,
+			   gpointer user_data);
 void dleyna_main_loop_quit(void);
 
 #endif /* DLEYNA_MAIN_LOOP_H__ */

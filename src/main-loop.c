@@ -39,6 +39,7 @@ struct dleyna_daemon_context_t_ {
 	dleyna_task_processor_t *processor;
 	dleyna_settings_t *settings;
 	const dleyna_connector_t *connector;
+	const dleyna_control_point_t *control_point;
 };
 
 static dleyna_daemon_context_t g_context;
@@ -52,7 +53,8 @@ static gboolean prv_context_quit_cb(gpointer user_data)
 	return FALSE;
 }
 
-static gboolean prv_context_init(const gchar *server)
+static gboolean prv_context_init(const gchar *server,
+				 const dleyna_control_point_t *control_point)
 {
 	gboolean retval = TRUE;
 	const gchar *connector;
@@ -60,6 +62,7 @@ static gboolean prv_context_init(const gchar *server)
 	memset(&g_context, 0, sizeof(g_context));
 
 	g_context.processor = dleyna_task_processor_new(prv_context_quit_cb);
+	g_context.control_point = control_point;
 
 	dleyna_settings_new(server, &g_context.settings);
 
@@ -76,7 +79,7 @@ static void prv_connector_acquired(dleyna_connector_id_t connection)
 {
 	g_context.connection = connection;
 
-	if (!dleyna_control_point_start_service(connection)) {
+	if (!g_context.control_point->start_service(connection)) {
 		g_context.error = TRUE;
 		g_main_loop_quit(g_context.main_loop);
 	}
@@ -104,7 +107,9 @@ static void prv_context_free(void)
 		dleyna_settings_delete(g_context.settings);
 }
 
-int dleyna_main_loop_start(char *server, gpointer user_data)
+int dleyna_main_loop_start(char *server,
+			   const dleyna_control_point_t *control_point,
+			   gpointer user_data)
 {
 	int retval = 1;
 
@@ -112,26 +117,26 @@ int dleyna_main_loop_start(char *server, gpointer user_data)
 
 	dleyna_log_init(server);
 
-	if (!prv_context_init(server))
+	if (!prv_context_init(server, control_point))
 		goto out;
 
 	if (!g_context.connector->initialize(
-				dleyna_control_point_server_introspection(),
-				dleyna_control_point_root_introspection(),
+				g_context.control_point->server_introspection(),
+				g_context.control_point->root_introspection(),
 				dleyna_error_quark(),
 				user_data))
 		goto out;
 
 	g_context.main_loop = g_main_loop_new(NULL, FALSE);
 
-	g_context.connector->connect(dleyna_control_point_server_name(),
+	g_context.connector->connect(g_context.control_point->server_name(),
 				     prv_connector_acquired,
 				     prv_name_lost);
 
 
-	dleyna_control_point_initialize(g_context.connector,
-					g_context.processor,
-					g_context.settings);
+	g_context.control_point->initialize(g_context.connector,
+					    g_context.processor,
+					    g_context.settings);
 
 	g_main_loop_run(g_context.main_loop);
 	if (g_context.error)
@@ -141,7 +146,7 @@ int dleyna_main_loop_start(char *server, gpointer user_data)
 
 on_error:
 
-	dleyna_control_point_free();
+	g_context.control_point->free();
 
 out:
 

@@ -1,4 +1,4 @@
-libdleyna_coreincdir = $(includedir)/dleyna-1.0/libdleyna
+libdleyna_coreincdir = $(includedir)/dleyna-1.0/libdleyna/core
 connectordir = $(libdir)/dleyna-1.0/connectors
 sysconfigdir = $(sysconfdir)
 

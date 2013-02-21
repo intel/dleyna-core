@@ -29,15 +29,27 @@
 #include "settings.h"
 #include "task-processor.h"
 
-void dleyna_control_point_initialize(const dleyna_connector_t *connector,
-				     dleyna_task_processor_t *processor,
-				     dleyna_settings_t *settings);
-void dleyna_control_point_free(void);
+typedef void (*dleyna_control_point_initialize_t)(
+					const dleyna_connector_t *connector,
+					dleyna_task_processor_t *processor,
+					dleyna_settings_t *settings);
+typedef void (*dleyna_control_point_free_t)(void);
 
-const gchar *dleyna_control_point_server_name(void);
-const gchar *dleyna_control_point_server_introspection(void);
-const gchar *dleyna_control_point_root_introspection(void);
+typedef const gchar *(*dleyna_control_point_server_name_t)(void);
+typedef const gchar *(*dleyna_control_point_server_introspection_t)(void);
+typedef const gchar *(*dleyna_control_point_root_introspection_t)(void);
 
-gboolean dleyna_control_point_start_service(dleyna_connector_id_t connection);
+typedef gboolean (*dleyna_control_point_start_service_t)(
+					dleyna_connector_id_t connection);
+
+typedef struct dleyna_control_point_t_ dleyna_control_point_t;
+struct dleyna_control_point_t_ {
+	dleyna_control_point_initialize_t initialize;
+	dleyna_control_point_free_t free;
+	dleyna_control_point_server_name_t server_name;
+	dleyna_control_point_server_introspection_t server_introspection;
+	dleyna_control_point_root_introspection_t root_introspection;
+	dleyna_control_point_start_service_t start_service;
+};
 
 #endif /* DLEYNA_CONTROL_POINT_H__ */
