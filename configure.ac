@@ -1,7 +1,7 @@
 AC_PREREQ([2.66])
 
-AC_INIT([libdleyna-core],
-	[1.0.0],
+AC_INIT([dleyna-core],
+	[0.0.1],
 	[https://github.com/01org/dleyna-core/issues/new],
 	,
 	[https://01.org/dleyna/])

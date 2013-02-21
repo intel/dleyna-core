@@ -88,7 +88,7 @@ static void prv_name_lost(dleyna_connector_id_t connection)
 	dleyna_task_processor_set_quitting(g_context.processor);
 }
 
-static void prv_msu_context_free(void)
+static void prv_context_free(void)
 {
 	dleyna_task_processor_free(g_context.processor);
 
@@ -145,7 +145,7 @@ on_error:
 
 out:
 
-	prv_msu_context_free();
+	prv_context_free();
 
 	dleyna_log_finalize();
 

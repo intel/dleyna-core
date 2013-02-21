@@ -27,7 +27,7 @@ follows:
      # sudo make install
 
 These instructions are suitable for users who simply want to install
-and run media-service-upnp.  However, developers wishing to contribute
+and run dleyna-core.  However, developers wishing to contribute
 to the project should follow a separate "Configure and build" step.
 
    Configure and build
