@@ -24,6 +24,7 @@
 #define DLEYNA_MAIN_LOOP_H__
 
 #include "connector.h"
+#include "control-point.h"
 
 int dleyna_main_loop_start(char *server,
 			   const dleyna_control_point_t *control_point,
