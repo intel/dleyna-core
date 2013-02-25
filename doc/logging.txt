@@ -1,0 +1,101 @@
+dLeyna components allow information to be output using a logging mechanism.
+This service currently implements 2 output mechanisms and different 'levels' of
+importance for messages.
+
+Logging type:
+-------------
+
+dLeyna components can choose between 'syslog' or glib logging system.
+
+The logging type can be set at configuration time and changed dynamically at
+runtime.
+
+When configuring the project, use the --with-log-type option to select your
+desired logging service.
+
+	--with-log-type=0: syslog service will be used.
+	--with-log-type=1: glib system will be used.
+
+
+The logging options of a dLeyna service can also be modified at runtime
+by modifying the service's configuration file. Each dLeyna service has
+its own configuration file, e.g., dleyna-server.conf or dleyna-renderer.conf,
+and these files are located in the default local configuration folder (usually
+in your home folder, /home/<user>/.config/).
+
+Each configuration file has an option called log-type.
+
+	log-type=0: syslog service will be used.
+	log-type=1: glib system will be used.
+
+dLeyna components monitor these configuration files.  Any changes on it are
+applied immediately.
+
+
+Logging level:
+--------------
+
+The logging level selects which kind of messages in the code are going to be
+logged.
+
+The logging level is set at configuration time and a subset of this initial
+configuration can be changed dynamically at run time.
+
+dLeyna components define 6 levels of importance:
+
+	1: errors
+	2: critical messages
+	3: warnings
+	4: messages/notices
+	5: informational messages
+	6: debug messages
+
+When configuring the project, use the --with-log-level option to select your
+desired logging messages.
+
+Allowed values for --with-log-level are:
+	0 = disabled
+	7 = default (=1,2,5)
+	8 = all (=1,2,3,4,5,6)
+	1,..,6 = a comma separated list of log level
+
+ex: --with-log-level=2,5,6 will log only critical, informational and debug
+messages.
+
+The service can also be changed at runtime by modifying the configuration file.
+The service's configuration file has an option called log-level.
+The values for log-level are the same as for --with-log-level.
+
+Be careful, logging messages not selected during the configuration of the
+project, could not be enabled at runtime.  These messages are stripped at
+compilation time.  You can only specify a sub selection of the one defined with
+--with-log-level option.
+
+ex:
+--with-log-level=2,5,6
+At run time you can change log-level to
+log-level=2: Only critical messages will be logged.
+log-level=5,6: sub selection of --with-log-level.
+log-level=8: enable all options define by --with-log-level. Same as =2,5,6
+log-level=0: disable logging
+
+DOES NOT WORK: log-level=1,3. Not part of --with-log-level option.
+
+
+Macros:
+-------
+
+To log messages, use the predefined macros below:
+
+DLEYNA_LOG_LEVEL_ERROR
+DLEYNA_LOG_LEVEL_CRITICAL
+DLEYNA_LOG_LEVEL_WARNING
+DLEYNA_LOG_LEVEL_MESSAGE
+DLEYNA_LOG_LEVEL_INFO
+DLEYNA_LOG_LEVEL_DEBUG
+
+DLEYNA_LOG_LEVEL_ERROR should not be used in release code but only for debug
+purpose.
+When log-level=1 (error message) is used with log-type=1 (glib), a call to
+the the logging function is always fatal, and results in a call to abort().
+This is not acceptable in release.
