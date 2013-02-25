@@ -1,0 +1,201 @@
+Coding Style
+--------------
+
+dLeyna uses the linux kernel coding standard (1), with some exceptions
+and additions.  The linux kernel coding standard needsto be read in
+addition to this document before code can be submitted to dLeyna.
+There is one exception to the linux coding standard permitted by
+dLeyna; typedefs are used for structures, for example
+
+    typedef struct dleyna_buf_t_ dleyna_buf_t;
+    struct dleyna_buf_t_ {
+        unsigned int size;
+        unsigned int max_size;
+        unsigned int block_size;
+        uint8_t *buffer;
+   };
+
+We also have a number of additions to the linux coding guidelines,
+each of which will be described in its own section.
+
+Naming
+-------
+
+All identifiers, be they labels, function names, types or variables
+should be in lower case. Underscores '_', should be used to separate
+the different words that compose multi-word identifiers, e.g.,
+do_something.
+
+Identifiers that are accessible in publix headers should be prefixed by
+dleyna_ or DLEYNA_ depending on whether they are types, functions and
+variables or macros.
+
+Identifiers that are accessible outside the file in which they are
+defined, but not in public header, should be prefixed by one of the
+prefix defined below, like dlc_ or DLC_ depending on whether they are
+types, functions and variables or macros.
+
+List of prefix by component:
+
+|--------------------------------------------------------------------|
+| Composant                | GitHub repository     | Function prefix |
+|--------------------------------------------------------------------|
+| Control point core       | dleyna-core           | dlc_            |
+| Control point server     | dleyna-server         | dls_            |
+| Control point renderer   | dleyna-renderer       | dlr_            |
+|--------------------------------------------------------------------|
+| Connectors dbus          | dleyna-connector-dbus | dcd_            |
+|--------------------------------------------------------------------|
+| Control/demo Application | dleyna-control        | dac_            |
+|--------------------------------------------------------------------|
+
+
+The names of any new types defined should end in _t.
+
+Functions that are private to a given file should be static and their
+names should be prefixed with prv_, e.g., prv_open_file.
+
+The names of functions that are accessible outside a file and are
+essentially methods that operate on a structure should be prefixed by
+the name of the structure, in addition to dleyna_.  Therefore a function
+that creates a pointer array might be called dleyna_pointer_array_create.
+
+Parameters
+-----------
+
+Function parameters should not be prefixed with any identifiers that
+indicate whether they are input or output parameters.
+
+Input parameters should appear at the beginning of the parameter list.
+
+Output parameters should appear at the end of the argument list. The
+first parameter of a method that operates on an existing structure
+instance should be a pointer to that structure instance. An exception
+here are constructor functions, where the created structure instance
+will be passed out of the constructor using the final output parameter
+of the parameter list. Here are some examples,
+
+    void dleyna_file_new(const char *fname, map_file_t **map_file);
+    const char *dleyna_file_search(map_file_t *map_file,
+                                   const char *key);
+
+Errors
+-----------
+
+In all but the most simple functions errors should be handled using
+gotos.  For example;
+
+    int fn()
+    {
+        if (!fn1())
+            goto on_error;
+
+        if (!fn2())
+            goto on_error;
+
+     on_error:
+
+        return err;
+    }
+
+
+The label on_error should be used as the label to jump to in
+case of error.  You are free to define additional labels using your own
+naming scheme if necessary, e.g., no_free.
+
+Functions
+-------------
+
+Functions should only have one exit point.  Multiple exit points typically
+lead to memory leaks and other errors.  Multiple return statements are
+permitted in one case only and this is when both return statements appear at
+the bottom of the function on either sides of an error label.  Sometimes
+this is useful to avoid having to set local variables whose ownership is
+being transferred to the caller to NULL, e.g.,
+
+    gboolean fn(char **name)
+    {
+        char *str;
+
+        str = strdup("Hello");
+        if (!str)
+            goto on_error;
+
+        ok = fn1(str);
+        if (!ok)
+            goto on_error;
+
+        *name = str;
+
+        return TRUE;
+
+ on_error:
+
+         free(str);
+
+         return FALSE;
+}
+
+Header Files:
+-------------
+
+Should include header guards whose names should be in uppercase and derived
+from the project name, e.g., DLEYNA_ or DLC_, and the file name.  The
+guard names should be followed by an underscore, e.g.,
+
+
+    #ifndef DLEYNA_UTILS_H__
+    #define DLEYNA_UTILS_H__
+
+    #ifndef DLC_CORE_UTILS_H__
+    #define DLC_CORE_UTILS_H__
+
+config.h should never be included in a header file as it does not
+contain any header guards.
+
+Local Variables:
+----------------
+
+Local variables should all be declared at the top of the function.
+This is enforced by compiler options.
+
+
+Global Variables:
+-----------------
+
+Modifiable global variables should be avoided where possible. Constant global
+variables are permitted. The names of global variables should be begin with
+g_, i.e., g_token_dictionary.
+
+Git Usage:
+-----------
+
+We will try to maintain a single branch in our git repository.  Please rebase
+your changes before submitting patches.
+
+Do not submit multiple features or bugs fixes in the same patch.  Split your
+changes into separate smaller patches.
+
+Checking files:
+---------------
+
+To check sources and headers files, you can use the script checkpatch.pl,
+provided by the kernel.  You can find it a the location below, depending of your
+kernel version:
+
+/usr/src/linux-headers-X.Y.Z-TT/scripts/checkpatch.pl
+
+You can run it on files with these options:
+
+checkpatch.pl --no-tree -f --strict --show-types --ignore NEW_TYPEDEFS
+
+checkpatch.pl exceptions:
+-------------------------
+
+There is currently 1 checkpatch exceptions
+
+    - Line over 80 chars. Allowed only for error messages.
+
+References
+----------
+(1) http://www.kernel.org/doc/Documentation/CodingStyle
