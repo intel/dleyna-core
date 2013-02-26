@@ -44,11 +44,23 @@ struct dleyna_daemon_context_t_ {
 
 static dleyna_daemon_context_t g_context;
 
+static gboolean prv_context_mainloop_quit_cb(gpointer user_data)
+{
+	DLEYNA_LOG_DEBUG("Main loop quit");
+
+	g_main_loop_quit(g_context.main_loop);
+
+	return FALSE;
+}
+
 static gboolean prv_context_quit_cb(gpointer user_data)
 {
 	DLEYNA_LOG_DEBUG("Quitting");
 
-	g_main_loop_quit(g_context.main_loop);
+	g_context.connector->disconnect();
+	g_context.control_point->finalize();
+
+	g_timeout_add_seconds(1, prv_context_mainloop_quit_cb, NULL);
 
 	return FALSE;
 }

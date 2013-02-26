@@ -33,6 +33,7 @@ typedef void (*dleyna_control_point_initialize_t)(
 					const dleyna_connector_t *connector,
 					dleyna_task_processor_t *processor,
 					dleyna_settings_t *settings);
+typedef void (*dleyna_control_point_finalize_t)(void);
 typedef void (*dleyna_control_point_free_t)(void);
 
 typedef const gchar *(*dleyna_control_point_server_name_t)(void);
@@ -45,6 +46,7 @@ typedef gboolean (*dleyna_control_point_start_service_t)(
 typedef struct dleyna_control_point_t_ dleyna_control_point_t;
 struct dleyna_control_point_t_ {
 	dleyna_control_point_initialize_t initialize;
+	dleyna_control_point_finalize_t finalize;
 	dleyna_control_point_free_t free;
 	dleyna_control_point_server_name_t server_name;
 	dleyna_control_point_server_introspection_t server_introspection;
