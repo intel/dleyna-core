@@ -42,6 +42,7 @@ typedef void (*dleyna_connector_connect_t)(
 			const gchar *server_name,
 			dleyna_connector_connected_cb_t connected_cb,
 			dleyna_connector_disconnected_cb_t disconnected_cb);
+typedef void (*dleyna_connector_disconnect_t)(void);
 
 typedef void (*dleyna_connector_client_new_cb_t)(const gchar *client_name);
 typedef void (*dleyna_connector_client_lost_cb_t)(const gchar *client_name);
@@ -99,6 +100,7 @@ struct dleyna_connector_t_ {
 	dleyna_connector_initialize_t initialize;
 	dleyna_connector_shutdown_t shutdown;
 	dleyna_connector_connect_t connect;
+	dleyna_connector_disconnect_t disconnect;
 	dleyna_connector_watch_client_t watch_client;
 	dleyna_connector_unwatch_client_t unwatch_client;
 	dleyna_connector_set_client_lost_cb_t set_client_lost_cb;
