@@ -58,7 +58,7 @@ static gboolean prv_context_quit_cb(gpointer user_data)
 	DLEYNA_LOG_DEBUG("Quitting");
 
 	g_context.connector->disconnect();
-	g_context.control_point->finalize();
+	g_context.control_point->stop_service();
 
 	g_timeout_add_seconds(1, prv_context_mainloop_quit_cb, NULL);
 
