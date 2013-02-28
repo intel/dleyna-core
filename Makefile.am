@@ -6,6 +6,7 @@ DLEYNA_CORE_VERSION = 1:0:0
 
 AM_CFLAGS =	$(GLIB_CFLAGS)				\
 		$(GIO_CFLAGS)				\
+		$(GMODULE_CFLAGS)			\
 		$(GUPNP_CFLAGS)				\
 		-include config.h			\
 		-DSYS_CONFIG_DIR="\"$(sysconfdir)\""	\
@@ -41,6 +42,7 @@ libdleyna_core_1_0_la_SOURCES =	$(libdleyna_coreinc_HEADERS)	\
 
 libdleyna_core_1_0_la_LIBADD =	$(GLIB_LIBS)	\
 				$(GIO_LIBS)	\
+				$(GMODULE_LIBS)	\
 				$(GUPNP_LIBS)
 
 MAINTAINERCLEANFILES =	Makefile.in		\
