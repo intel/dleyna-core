@@ -6,6 +6,8 @@ DLEYNA_CORE_VERSION = 1:0:0
 
 AM_CFLAGS =	$(GLIB_CFLAGS)				\
 		$(GIO_CFLAGS)				\
+		$(GMODULE_CFLAGS)			\
+		$(GUPNP_CFLAGS)				\
 		-include config.h			\
 		-DSYS_CONFIG_DIR="\"$(sysconfdir)\""	\
 		-DCONNECTOR_DIR="\"$(connectordir)\""
@@ -20,6 +22,7 @@ libdleyna_coreinc_HEADERS = 	src/connector.h		\
 				src/error.h		\
 				src/log.h		\
 				src/main-loop.h		\
+				src/service-task.h	\
 				src/settings.h		\
 				src/task-atom.h		\
 				src/task-processor.h
@@ -33,11 +36,14 @@ libdleyna_core_1_0_la_SOURCES =	$(libdleyna_coreinc_HEADERS)	\
 				src/error.c			\
 				src/log.c			\
 				src/main-loop.c			\
+				src/service-task.c		\
 				src/settings.c			\
 				src/task-processor.c
 
 libdleyna_core_1_0_la_LIBADD =	$(GLIB_LIBS)	\
-				$(GIO_LIBS)
+				$(GIO_LIBS)	\
+				$(GMODULE_LIBS)	\
+				$(GUPNP_LIBS)
 
 MAINTAINERCLEANFILES =	Makefile.in		\
 			aclocal.m4		\
