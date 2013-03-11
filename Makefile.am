@@ -16,29 +16,29 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 
 lib_LTLIBRARIES = libdleyna-core-1.0.la
 
-libdleyna_coreinc_HEADERS = 	src/connector.h		\
-				src/connector-mgr.h	\
-				src/control-point.h	\
-				src/error.h		\
-				src/log.h		\
-				src/main-loop.h		\
-				src/service-task.h	\
-				src/settings.h		\
-				src/task-atom.h		\
-				src/task-processor.h
+libdleyna_coreinc_HEADERS = 	libdleyna/core/connector.h	\
+				libdleyna/core/connector-mgr.h	\
+				libdleyna/core/control-point.h	\
+				libdleyna/core/error.h		\
+				libdleyna/core/log.h		\
+				libdleyna/core/main-loop.h	\
+				libdleyna/core/service-task.h	\
+				libdleyna/core/settings.h	\
+				libdleyna/core/task-atom.h	\
+				libdleyna/core/task-processor.h
 
 
 libdleyna_core_1_0_la_LDFLAGS =	-version-info $(DLEYNA_CORE_VERSION) \
 				-no-undefined
 
 libdleyna_core_1_0_la_SOURCES =	$(libdleyna_coreinc_HEADERS)	\
-				src/connector-mgr.c		\
-				src/error.c			\
-				src/log.c			\
-				src/main-loop.c			\
-				src/service-task.c		\
-				src/settings.c			\
-				src/task-processor.c
+				libdleyna/core/connector-mgr.c	\
+				libdleyna/core/error.c		\
+				libdleyna/core/log.c		\
+				libdleyna/core/main-loop.c	\
+				libdleyna/core/service-task.c	\
+				libdleyna/core/settings.c	\
+				libdleyna/core/task-processor.c
 
 libdleyna_core_1_0_la_LIBADD =	$(GLIB_LIBS)	\
 				$(GIO_LIBS)	\
