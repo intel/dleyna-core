@@ -39,7 +39,7 @@ PKG_PROG_PKG_CONFIG(0.16)
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.28])
 PKG_CHECK_MODULES([GIO], [gio-2.0 >= 2.28])
 PKG_CHECK_MODULES([GMODULE], [gmodule-2.0 >= 2.28])
-PKG_CHECK_MODULES([GUPNP], [gupnp-1.0 >= 0.19.1])
+PKG_CHECK_MODULES([GUPNP], [gupnp-1.0 >= 0.20.1])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h syslog.h])
