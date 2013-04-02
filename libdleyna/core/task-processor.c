@@ -374,18 +374,25 @@ static gboolean prv_process_task(gpointer user_data)
 void dleyna_task_queue_start(const dleyna_task_queue_key_t *queue_id)
 {
 	dleyna_task_queue_t *queue;
+	dleyna_task_processor_t *processor = queue_id->processor;
 
 	DLEYNA_LOG_DEBUG("Enter - Starting queue <%s,%s>", queue_id->source,
 			 queue_id->sink);
 
-	queue = g_hash_table_lookup(queue_id->processor->task_queues, queue_id);
+	queue = g_hash_table_lookup(processor->task_queues, queue_id);
 
 	if (queue->defer_remove)
 		goto exit;
 
-	if (!queue->current_task && !queue->idle_id)
-		queue->idle_id = g_idle_add(prv_process_task,
-					    (gpointer)queue_id);
+	if (queue->tasks->len > 0) {
+		if (!queue->current_task && !queue->idle_id)
+			queue->idle_id = g_idle_add(prv_process_task,
+						    (gpointer)queue_id);
+	} else if (queue->flags & DLEYNA_TASK_QUEUE_FLAG_AUTO_REMOVE) {
+			DLEYNA_LOG_DEBUG("Removing queue <%s,%s>",
+					 queue_id->source, queue_id->sink);
+			g_hash_table_remove(processor->task_queues, queue_id);
+	}
 
 exit:
 	DLEYNA_LOG_DEBUG("Exit");
