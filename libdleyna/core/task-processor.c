@@ -379,7 +379,7 @@ void dleyna_task_queue_start(const dleyna_task_queue_key_t *queue_id)
 	DLEYNA_LOG_DEBUG("Enter - Starting queue <%s,%s>", queue_id->source,
 			 queue_id->sink);
 
-	queue = g_hash_table_lookup(queue_id->processor->task_queues, queue_id);
+	queue = g_hash_table_lookup(processor->task_queues, queue_id);
 
 	if (queue->defer_remove)
 		goto exit;
