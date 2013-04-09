@@ -90,18 +90,6 @@ static void prv_task_free_cb(gpointer data, gpointer user_data)
 	task_queue->task_delete_cb(data, task_queue->user_data);
 }
 
-static gboolean prv_finally_cb(gpointer data)
-{
-	dleyna_task_queue_t *task_queue = data;
-
-	task_queue->task_queue_finally_cb(task_queue->cancelled,
-					  task_queue->user_data);
-
-	g_free(task_queue);
-
-	return FALSE;
-}
-
 static void prv_free_cb(gpointer data)
 {
 	dleyna_task_queue_t *task_queue = data;
@@ -112,9 +100,10 @@ static void prv_free_cb(gpointer data)
 	g_ptr_array_unref(task_queue->tasks);
 
 	if (task_queue->task_queue_finally_cb)
-		g_idle_add(prv_finally_cb, task_queue);
-	else
-		g_free(task_queue);
+		task_queue->task_queue_finally_cb(task_queue->cancelled,
+						  task_queue->user_data);
+
+	g_free(task_queue);
 
 	DLEYNA_LOG_DEBUG("Exit");
 }
@@ -194,6 +183,9 @@ static void prv_task_cancel_and_free_cb(gpointer data, gpointer user_data)
 static void prv_cancel(const dleyna_task_queue_key_t *queue_id,
 				  dleyna_task_queue_t *task_queue)
 {
+	if (task_queue->cancelled)
+		goto out;
+
 	task_queue->cancelled = TRUE;
 
 	g_ptr_array_foreach(task_queue->tasks, prv_task_cancel_and_free_cb,
@@ -213,6 +205,9 @@ static void prv_cancel(const dleyna_task_queue_key_t *queue_id,
 				 queue_id->source, queue_id->sink);
 		g_hash_table_remove(queue_id->processor->task_queues, queue_id);
 	}
+
+out:
+	return;
 }
 
 static void prv_cancel_cb(gpointer key, gpointer value, gpointer user_data)
