@@ -234,7 +234,9 @@ void dleyna_task_processor_set_quitting(dleyna_task_processor_t *processor)
 	processor->quitting = TRUE;
 
 	prv_cancel_all_queues(processor);
-	g_idle_add(processor->on_quit_cb, NULL);
+
+	if (processor->running_tasks == 0)
+		g_idle_add(processor->on_quit_cb, NULL);
 
 	DLEYNA_LOG_DEBUG("Exit");
 }
