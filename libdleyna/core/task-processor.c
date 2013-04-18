@@ -233,10 +233,8 @@ void dleyna_task_processor_set_quitting(dleyna_task_processor_t *processor)
 
 	processor->quitting = TRUE;
 
-	if (processor->running_tasks > 0)
-		prv_cancel_all_queues(processor);
-	else
-		g_idle_add(processor->on_quit_cb, NULL);
+	prv_cancel_all_queues(processor);
+	g_idle_add(processor->on_quit_cb, NULL);
 
 	DLEYNA_LOG_DEBUG("Exit");
 }
@@ -352,9 +350,6 @@ static gboolean prv_process_task(gpointer user_data)
 	DLEYNA_LOG_DEBUG("Enter - Start task processing for queue <%s,%s>",
 			 queue_id->source, queue_id->sink);
 
-	if (queue_id->processor->quitting)
-		goto exit;
-
 	queue = g_hash_table_lookup(queue_id->processor->task_queues, queue_id);
 
 	queue->cancelled = FALSE;
@@ -364,7 +359,6 @@ static gboolean prv_process_task(gpointer user_data)
 	queue_id->processor->running_tasks++;
 	queue->task_process_cb(queue->current_task, queue->user_data);
 
-exit:
 	DLEYNA_LOG_DEBUG("Exit");
 
 	return FALSE;
