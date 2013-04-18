@@ -233,9 +233,9 @@ void dleyna_task_processor_set_quitting(dleyna_task_processor_t *processor)
 
 	processor->quitting = TRUE;
 
-	if (processor->running_tasks > 0)
-		prv_cancel_all_queues(processor);
-	else
+	prv_cancel_all_queues(processor);
+
+	if (processor->running_tasks == 0)
 		g_idle_add(processor->on_quit_cb, NULL);
 
 	DLEYNA_LOG_DEBUG("Exit");
@@ -373,6 +373,9 @@ void dleyna_task_queue_start(const dleyna_task_queue_key_t *queue_id)
 
 	DLEYNA_LOG_DEBUG("Enter - Starting queue <%s,%s>", queue_id->source,
 			 queue_id->sink);
+
+	if (processor->quitting)
+		goto exit;
 
 	queue = g_hash_table_lookup(processor->task_queues, queue_id);
 
