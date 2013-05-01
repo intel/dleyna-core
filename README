@@ -19,8 +19,7 @@ follows:
      # cd dleyna-core
 
    Configure and build
-     # ./autoreconf -i
-     # ./configure
+     # ./autogen.sh
      # make
 
    Final installation
