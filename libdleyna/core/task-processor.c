@@ -210,19 +210,26 @@ out:
 	return;
 }
 
-static void prv_cancel_cb(gpointer key, gpointer value, gpointer user_data)
-{
-	dleyna_task_queue_key_t *queue_id = key;
-	dleyna_task_queue_t *task_queue = value;
-
-	prv_cancel(queue_id, task_queue);
-}
-
 static void prv_cancel_all_queues(dleyna_task_processor_t *processor)
 {
+	GList *keys;
+	GList *ptr;
+	dleyna_task_queue_key_t *queue_id;
+	dleyna_task_queue_t *task_queue;
+
 	DLEYNA_LOG_DEBUG("Enter");
 
-	g_hash_table_foreach(processor->task_queues, prv_cancel_cb, NULL);
+	keys = g_hash_table_get_keys(processor->task_queues);
+	ptr = keys;
+	while (ptr) {
+		queue_id = ptr->data;
+		task_queue = g_hash_table_lookup(processor->task_queues,
+						 queue_id);
+		if (task_queue)
+			prv_cancel(queue_id, task_queue);
+		ptr = ptr->next;
+	}
+	g_list_free(keys);
 
 	DLEYNA_LOG_DEBUG("Exit");
 }
