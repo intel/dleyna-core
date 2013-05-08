@@ -180,9 +180,11 @@ static void prv_task_cancel_and_free_cb(gpointer data, gpointer user_data)
 	task_queue->task_delete_cb(data, task_queue->user_data);
 }
 
-static void prv_cancel(const dleyna_task_queue_key_t *queue_id,
-				  dleyna_task_queue_t *task_queue)
+static gboolean prv_cancel_only(const dleyna_task_queue_key_t *queue_id,
+				dleyna_task_queue_t *task_queue)
 {
+	gboolean remove_queue = FALSE;
+
 	if (task_queue->cancelled)
 		goto out;
 
@@ -197,32 +199,50 @@ static void prv_cancel(const dleyna_task_queue_key_t *queue_id,
 		task_queue->idle_id = 0;
 	}
 
-	if (task_queue->current_task) {
+	if (task_queue->current_task)
 		task_queue->task_cancel_cb(task_queue->current_task,
 					   task_queue->user_data);
-	} else if (task_queue->flags & DLEYNA_TASK_QUEUE_FLAG_AUTO_REMOVE) {
+	else
+		remove_queue = task_queue->flags &
+			DLEYNA_TASK_QUEUE_FLAG_AUTO_REMOVE;
+
+out:
+
+	return remove_queue;
+}
+
+
+static void prv_cancel(const dleyna_task_queue_key_t *queue_id,
+		       dleyna_task_queue_t *task_queue)
+{
+	if (prv_cancel_only(queue_id, task_queue)) {
 		DLEYNA_LOG_DEBUG("Removing queue <%s,%s>",
 				 queue_id->source, queue_id->sink);
 		g_hash_table_remove(queue_id->processor->task_queues, queue_id);
 	}
-
-out:
-	return;
 }
 
-static void prv_cancel_cb(gpointer key, gpointer value, gpointer user_data)
+static gboolean prv_cancel_cb(gpointer key, gpointer value, gpointer user_data)
 {
 	dleyna_task_queue_key_t *queue_id = key;
 	dleyna_task_queue_t *task_queue = value;
+	gboolean retval = prv_cancel_only(queue_id, task_queue);
 
-	prv_cancel(queue_id, task_queue);
+#if DLEYNA_LOG_LEVEL & DLEYNA_LOG_LEVEL_DEBUG
+	if (retval)
+		DLEYNA_LOG_DEBUG("Removing queue <%s,%s>", queue_id->source,
+				 queue_id->sink);
+#endif
+
+	return retval;
 }
 
 static void prv_cancel_all_queues(dleyna_task_processor_t *processor)
 {
 	DLEYNA_LOG_DEBUG("Enter");
 
-	g_hash_table_foreach(processor->task_queues, prv_cancel_cb, NULL);
+	g_hash_table_foreach_remove(processor->task_queues, prv_cancel_cb,
+				    NULL);
 
 	DLEYNA_LOG_DEBUG("Exit");
 }
