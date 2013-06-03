@@ -1,3 +1,6 @@
+version 0.1.0
+	- Prepare for first stable branch
+	
 version 0.0.2
 	- Add autogen.sh script to call `autoreconf -i`
 	- Fixed bug : dLeyna-renderer can crash on shutdown
