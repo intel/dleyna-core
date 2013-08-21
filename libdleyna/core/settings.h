@@ -28,9 +28,13 @@
 typedef struct dleyna_settings_t_ dleyna_settings_t;
 
 void dleyna_settings_new(const gchar *server, dleyna_settings_t **settings);
+
 void dleyna_settings_delete(dleyna_settings_t *settings);
 
+void dleyna_settings_init_white_list(dleyna_settings_t *settings);
+
 gboolean dleyna_settings_is_never_quit(dleyna_settings_t *settings);
+
 const gchar *dleyna_settings_connector_name(dleyna_settings_t *settings);
 
 #endif /* DLEYNA_SETTINGS_H__ */

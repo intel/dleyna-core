@@ -25,6 +25,7 @@
 
 #include "log.h"
 #include "settings.h"
+#include "white-list.h"
 
 struct dleyna_settings_t_ {
 	GKeyFile *keyfile;
@@ -40,15 +41,23 @@ struct dleyna_settings_t_ {
 	/* Log section */
 	dleyna_log_type_t log_type;
 	int log_level;
+
+	/* netf section */
+	gboolean netf_enabled;
+	GVariant *netf_entries;
 };
 
 #define DLEYNA_SETTINGS_GROUP_GENERAL		"general"
 #define DLEYNA_SETTINGS_KEY_NEVER_QUIT		"never-quit"
 #define DLEYNA_SETTINGS_KEY_CONNECTOR_NAME	"connector-name"
 
-#define DLEYNA_SETTINGS_GROUP_LOG	"log"
-#define DLEYNA_SETTINGS_KEY_LOG_TYPE	"log-type"
-#define DLEYNA_SETTINGS_KEY_LOG_LEVEL	"log-level"
+#define DLEYNA_SETTINGS_GROUP_LOG		"log"
+#define DLEYNA_SETTINGS_KEY_LOG_TYPE		"log-type"
+#define DLEYNA_SETTINGS_KEY_LOG_LEVEL		"log-level"
+
+#define DLEYNA_SETTINGS_GROUP_NETF		"netf"
+#define DLEYNA_SETTINGS_KEY_NETF_ENABLED	"netf-enabled"
+#define DLEYNA_SETTINGS_KEY_NETF_LIST		"netf-list"
 
 #define DLEYNA_SETTINGS_DEFAULT_NEVER_QUIT	DLEYNA_NEVER_QUIT
 #define DLEYNA_SETTINGS_DEFAULT_CONNECTOR_NAME	DLEYNA_CONNECTOR_NAME
@@ -57,17 +66,29 @@ struct dleyna_settings_t_ {
 
 #define DLEYNA_SETTINGS_LOG_KEYS(sys, loc, settings) \
 do { \
+	gchar *str = NULL; \
+	\
 	DLEYNA_LOG_DEBUG_NL(); \
 	DLEYNA_LOG_INFO("Load file [%s]", loc ? loc : sys); \
 	DLEYNA_LOG_DEBUG_NL(); \
+	\
 	DLEYNA_LOG_DEBUG("[General settings]"); \
 	DLEYNA_LOG_DEBUG("Never Quit: %s", (settings)->never_quit ? "T" : "F");\
 	DLEYNA_LOG_DEBUG_NL(); \
 	DLEYNA_LOG_DEBUG("Connector Name: %s", (settings)->connector_name);\
 	DLEYNA_LOG_DEBUG_NL(); \
+	\
 	DLEYNA_LOG_DEBUG("[Logging settings]"); \
 	DLEYNA_LOG_DEBUG("Log Type : %d", (settings)->log_type); \
 	DLEYNA_LOG_DEBUG("Log Level: 0x%02X", (settings)->log_level); \
+	DLEYNA_LOG_DEBUG_NL(); \
+	\
+	if ((settings)->netf_entries != NULL) \
+		str = g_variant_print((settings)->netf_entries, FALSE); \
+	DLEYNA_LOG_DEBUG("[Network filtering settings]"); \
+	DLEYNA_LOG_DEBUG("Enabled : %s", (settings)->netf_enabled ? "T" : "F");\
+	DLEYNA_LOG_DEBUG("Entries: %s", str); \
+	g_free(str); \
 	DLEYNA_LOG_DEBUG_NL(); \
 } while (0)
 
@@ -148,6 +169,25 @@ exit:
 	return keyfile;
 }
 
+static GVariant *prv_to_netf_entries(char **list)
+{
+	GVariantBuilder vb;
+	GVariant *result = NULL;
+
+	if ((list != NULL) && (*list != NULL)) {
+		g_variant_builder_init(&vb, G_VARIANT_TYPE("as"));
+
+		while (*list != NULL) {
+			g_variant_builder_add(&vb, "s", *list);
+			list++;
+		}
+
+		result = g_variant_ref_sink(g_variant_builder_end(&vb));
+	}
+
+	return result;
+}
+
 static int prv_to_log_level(gint *int_list, gsize length)
 {
 	gsize i;
@@ -205,6 +245,7 @@ static void prv_read_keys(dleyna_settings_t *settings)
 	gchar *s_val;
 	gint *int_star;
 	gsize length;
+	gchar **list;
 
 	b_val = g_key_file_get_boolean(keyfile,
 				       DLEYNA_SETTINGS_GROUP_GENERAL,
@@ -252,9 +293,34 @@ static void prv_read_keys(dleyna_settings_t *settings)
 					       &error);
 
 	if (error == NULL) {
-		settings->log_level = prv_to_log_level(int_star,
-								    length);
+		settings->log_level = prv_to_log_level(int_star, length);
 		g_free(int_star);
+	} else {
+		g_error_free(error);
+		error = NULL;
+	}
+
+	b_val = g_key_file_get_boolean(keyfile,
+				       DLEYNA_SETTINGS_GROUP_NETF,
+				       DLEYNA_SETTINGS_KEY_NETF_ENABLED,
+				       &error);
+
+	if (error == NULL) {
+		settings->netf_enabled = b_val;
+	} else {
+		g_error_free(error);
+		error = NULL;
+	}
+
+	list = g_key_file_get_string_list(keyfile,
+					  DLEYNA_SETTINGS_GROUP_NETF,
+					  DLEYNA_SETTINGS_KEY_NETF_LIST,
+					  NULL,
+					  &error);
+
+	if (error == NULL) {
+		settings->netf_entries = prv_to_netf_entries(list);
+		g_strfreev(list);
 	} else {
 		g_error_free(error);
 		error = NULL;
@@ -269,6 +335,9 @@ static void prv_init_default(dleyna_settings_t *settings)
 
 	settings->log_type = DLEYNA_SETTINGS_DEFAULT_LOG_TYPE;
 	settings->log_level = DLEYNA_SETTINGS_DEFAULT_LOG_LEVEL;
+
+	settings->netf_enabled = FALSE;
+	settings->netf_entries = NULL;
 }
 
 static void prv_keyfile_init(dleyna_settings_t *settings,
@@ -289,18 +358,63 @@ static void prv_keyfile_init(dleyna_settings_t *settings,
 
 static void prv_keyfile_finalize(dleyna_settings_t *settings)
 {
+	if (settings->netf_entries != NULL) {
+		g_variant_unref(settings->netf_entries);
+		settings->netf_entries = NULL;
+	}
+
 	if (settings->keyfile != NULL) {
 		g_key_file_free(settings->keyfile);
 		settings->keyfile = NULL;
 	}
 }
 
+static gboolean prv_netf_entries_are_equal(GVariant *old, GVariant *new)
+{
+	gboolean match;
+	GVariantIter iter1;
+	GVariantIter iter2;
+	gchar *entry1;
+	gchar *entry2;
+
+	match = (old == new);
+
+	if (match ||
+	    ((old == NULL) && (new != NULL)) ||
+	    ((old != NULL) && (new == NULL)))
+		goto exit;
+
+	(void) g_variant_iter_init(&iter1, old);
+
+	while (g_variant_iter_next(&iter1, "&s", &entry1)) {
+		(void) g_variant_iter_init(&iter2, new);
+
+		while (g_variant_iter_next(&iter2, "&s", &entry2) && !match)
+			match = !strcmp(entry1, entry2);
+
+		if (!match)
+			break;
+	}
+
+exit:
+	return match;
+}
+
 static void prv_reload(dleyna_settings_t *settings)
 {
 	gchar *sys_path = NULL;
 	gchar *loc_path = NULL;
+	gboolean saved_netf_enabled;
+	GVariant *saved_netf_entries;
+	GVariant *netf_entries;
 
 	DLEYNA_LOG_INFO("Reload local configuration file");
+
+	/* Save all White List information */
+	saved_netf_enabled = settings->netf_enabled;
+	saved_netf_entries = settings->netf_entries;
+	/* Prevent prv_keyfile_finalize()) to free it */
+	settings->netf_entries = NULL;
 
 	prv_keyfile_finalize(settings);
 	prv_init_default(settings);
@@ -308,6 +422,32 @@ static void prv_reload(dleyna_settings_t *settings)
 
 	if (sys_path || loc_path)
 		prv_keyfile_init(settings, sys_path, loc_path);
+
+	netf_entries = settings->netf_entries;
+
+	/* FIXME: Block white list signals instead */
+	/* A little optimization hack:
+	 * 1 - Updating the wl list has no effect if the wl is disabled.
+	 * 2 - If the enabled settings has changed to disabled, apply first.
+	 * 3 - If it has changed to enabled, update the list first, then
+	 *     apply the change last.
+	 */
+	if (!settings->netf_enabled && saved_netf_enabled)
+		dleyna_white_list_enable(settings->netf_enabled, TRUE);
+
+	/* Remove old entries if new ones are different.
+	 * Don't clear() to avoid to loose entries added by a client
+	 */
+	if (!prv_netf_entries_are_equal(saved_netf_entries, netf_entries)) {
+		dleyna_white_list_remove_entries(saved_netf_entries, FALSE);
+		dleyna_white_list_add_entries(netf_entries, TRUE);
+	}
+
+	if (settings->netf_enabled && !saved_netf_enabled)
+		dleyna_white_list_enable(settings->netf_enabled, TRUE);
+
+	if (saved_netf_entries != NULL)
+		g_variant_unref(saved_netf_entries);
 
 	DLEYNA_SETTINGS_LOG_KEYS(sys_path, loc_path, settings);
 
@@ -430,10 +570,17 @@ void dleyna_settings_delete(dleyna_settings_t *settings)
 		g_file_monitor_cancel(settings->monitor);
 		g_object_unref(settings->monitor);
 	}
+
 	g_free(settings->connector_name);
 	g_free(settings->file_name);
 
 	prv_keyfile_finalize(settings);
 
 	g_free(settings);
+}
+
+void dleyna_settings_init_white_list(dleyna_settings_t *settings)
+{
+	dleyna_white_list_add_entries(settings->netf_entries, TRUE);
+	dleyna_white_list_enable(settings->netf_enabled, TRUE);
 }
