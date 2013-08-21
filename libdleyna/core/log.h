@@ -47,15 +47,11 @@ void dleyna_log_trace(int priority, GLogLevelFlags flags,
  */
 #ifdef DLEYNA_DEBUG_ENABLED
 	#define DLEYNA_LOG_HELPER(priority, flags, fmt, ...)    \
-		do { \
 			dleyna_log_trace(priority, flags, "%s : %s() --- " fmt,\
-				      __FILE__, __func__, ## __VA_ARGS__); \
-		} while (0)
+				      __FILE__, __func__, ## __VA_ARGS__);
 #else
 	#define DLEYNA_LOG_HELPER(priority, flags, fmt, ...) \
-		do { \
-			dleyna_log_trace(priority, flags, fmt, ## __VA_ARGS__);\
-		} while (0)
+			dleyna_log_trace(priority, flags, fmt, ## __VA_ARGS__);
 #endif
 
 
@@ -126,9 +122,7 @@ void dleyna_log_trace(int priority, GLogLevelFlags flags,
  */
 #if DLEYNA_LOG_LEVEL & DLEYNA_LOG_LEVEL_DEBUG
 	#define DLEYNA_LOG_DEBUG_NL() \
-		do { \
-			dleyna_log_trace(LOG_DEBUG, G_LOG_LEVEL_DEBUG, " "); \
-		} while (0)
+			dleyna_log_trace(LOG_DEBUG, G_LOG_LEVEL_DEBUG, " ");
 #else
 	#define DLEYNA_LOG_DEBUG_NL()
 #endif

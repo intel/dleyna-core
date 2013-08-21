@@ -67,7 +67,7 @@ typedef guint (*dleyna_connector_publish_object_t)(
 			dleyna_connector_id_t connection,
 			const gchar *object_path,
 			gboolean root,
-			const gchar* interface_name,
+			const gchar *interface_name,
 			const dleyna_connector_dispatch_cb_t *cb_table_1);
 typedef guint (*dleyna_connector_publish_subtree_t)(
 				dleyna_connector_id_t connection,
