@@ -31,7 +31,7 @@ void dleyna_settings_new(const gchar *server, dleyna_settings_t **settings);
 
 void dleyna_settings_delete(dleyna_settings_t *settings);
 
-void dleyna_settings_post_init(dleyna_settings_t *settings);
+void dleyna_settings_init_white_list(dleyna_settings_t *settings);
 
 gboolean dleyna_settings_is_never_quit(dleyna_settings_t *settings);
 

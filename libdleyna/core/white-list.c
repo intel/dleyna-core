@@ -38,8 +38,8 @@ static void prv_dump_wl_entries(GUPnPWhiteList *wl)
 	DLEYNA_LOG_DEBUG("White List entries:");
 
 	if (l != NULL) {
-		while(l != NULL) {
-			DLEYNA_LOG_DEBUG("     Entry: [%s].", (char *) l->data);
+		while (l != NULL) {
+			DLEYNA_LOG_DEBUG("     Entry: [%s].", (char *)l->data);
 			l = l->next;
 		}
 	} else {
@@ -120,5 +120,6 @@ void dleyna_white_list_set_info(dleyna_white_list_t *data)
 {
 	if (data != NULL)
 		memcpy(&g_wl_cb, data, sizeof(dleyna_white_list_t));
-	else memset(&g_wl_cb, 0, sizeof(dleyna_white_list_t));
+	else
+		memset(&g_wl_cb, 0, sizeof(dleyna_white_list_t));
 }

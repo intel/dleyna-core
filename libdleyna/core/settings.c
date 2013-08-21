@@ -389,9 +389,8 @@ static gboolean prv_netf_entries_are_equal(GVariant *old, GVariant *new)
 	while (g_variant_iter_next(&iter1, "&s", &entry1)) {
 		(void) g_variant_iter_init(&iter2, new);
 
-		while (g_variant_iter_next(&iter2, "&s", &entry2) && !match) {
+		while (g_variant_iter_next(&iter2, "&s", &entry2) && !match)
 			match = !strcmp(entry1, entry2);
-		}
 
 		if (!match)
 			break;
@@ -433,8 +432,7 @@ static void prv_reload(dleyna_settings_t *settings)
 	 * 3 - If it has changed to enabled, update the list first, then
 	 *     apply the change last.
 	 */
-	if (!settings->netf_enabled &&
-	    (settings->netf_enabled != saved_netf_enabled))
+	if (!settings->netf_enabled && saved_netf_enabled)
 		dleyna_white_list_enable(settings->netf_enabled, TRUE);
 
 	/* Remove old entries if new ones are different.
@@ -445,8 +443,7 @@ static void prv_reload(dleyna_settings_t *settings)
 		dleyna_white_list_add_entries(netf_entries, TRUE);
 	}
 
-	if (settings->netf_enabled &&
-	   (settings->netf_enabled != saved_netf_enabled))
+	if (settings->netf_enabled && !saved_netf_enabled)
 		dleyna_white_list_enable(settings->netf_enabled, TRUE);
 
 	if (saved_netf_entries != NULL)
@@ -582,7 +579,7 @@ void dleyna_settings_delete(dleyna_settings_t *settings)
 	g_free(settings);
 }
 
-void dleyna_settings_post_init(dleyna_settings_t *settings)
+void dleyna_settings_init_white_list(dleyna_settings_t *settings)
 {
 	dleyna_white_list_add_entries(settings->netf_entries, TRUE);
 	dleyna_white_list_enable(settings->netf_enabled, TRUE);
