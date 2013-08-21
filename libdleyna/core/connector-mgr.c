@@ -26,7 +26,7 @@
 #include "connector-mgr.h"
 #include "log.h"
 
-static GHashTable *g_connectors = NULL;
+static GHashTable *g_connectors;
 
 const dleyna_connector_t *dleyna_connector_mgr_load(const gchar *name)
 {
