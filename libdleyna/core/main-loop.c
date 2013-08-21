@@ -125,7 +125,9 @@ int dleyna_main_loop_start(char *server,
 {
 	int retval = 1;
 
+#if !GLIB_CHECK_VERSION(2, 35, 0)
 	g_type_init();
+#endif
 
 	dleyna_log_init(server);
 
