@@ -2,7 +2,7 @@ libdleyna_coreincdir = $(includedir)/dleyna-1.0/libdleyna/core
 connectordir = $(libdir)/dleyna-1.0/connectors
 sysconfigdir = $(sysconfdir)
 
-DLEYNA_CORE_VERSION = 1:2:0
+DLEYNA_CORE_VERSION = 2:0:1
 
 AM_CFLAGS =	$(GLIB_CFLAGS)				\
 		$(GIO_CFLAGS)				\
@@ -25,7 +25,8 @@ libdleyna_coreinc_HEADERS = 	libdleyna/core/connector.h	\
 				libdleyna/core/service-task.h	\
 				libdleyna/core/settings.h	\
 				libdleyna/core/task-atom.h	\
-				libdleyna/core/task-processor.h
+				libdleyna/core/task-processor.h	\
+				libdleyna/core/white-list.h
 
 
 libdleyna_core_1_0_la_LDFLAGS =	-version-info $(DLEYNA_CORE_VERSION) \
@@ -38,7 +39,8 @@ libdleyna_core_1_0_la_SOURCES =	$(libdleyna_coreinc_HEADERS)	\
 				libdleyna/core/main-loop.c	\
 				libdleyna/core/service-task.c	\
 				libdleyna/core/settings.c	\
-				libdleyna/core/task-processor.c
+				libdleyna/core/task-processor.c	\
+				libdleyna/core/white-list.c
 
 libdleyna_core_1_0_la_LIBADD =	$(GLIB_LIBS)	\
 				$(GIO_LIBS)	\
