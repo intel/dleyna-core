@@ -148,6 +148,7 @@ void dleyna_log_init(const char *program, const char* version)
 	openlog(basename(program), option, LOG_DAEMON);
 
 	old = setlogmask(LOG_MASK(LOG_INFO));
+	syslog(LOG_INFO, "dLeyna core version %s", VERSION);
 	syslog(LOG_INFO, "%s version %s", program, version);
 	(void) setlogmask(s_log_context.mask);
 
@@ -157,8 +158,10 @@ void dleyna_log_init(const char *program, const char* version)
 							&s_log_context);
 
 #if DLEYNA_LOG_LEVEL & DLEYNA_LOG_LEVEL_INFO
-	if (s_log_context.log_type != DLEYNA_LOG_TYPE_SYSLOG)
+	if (s_log_context.log_type != DLEYNA_LOG_TYPE_SYSLOG) {
+		DLEYNA_LOG_INFO("dLeyna core version %s", VERSION);
 		DLEYNA_LOG_INFO("%s version %s", program, version);
+	}
 #endif
 }
 
