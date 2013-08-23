@@ -33,7 +33,7 @@ enum dleyna_log_type_t_ {
 };
 typedef enum dleyna_log_type_t_ dleyna_log_type_t;
 
-void dleyna_log_init(const char *program);
+void dleyna_log_init(const char *program, const char *version);
 
 void dleyna_log_finalize(void);
 
