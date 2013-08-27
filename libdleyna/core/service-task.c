@@ -92,7 +92,8 @@ void dleyna_service_task_process_cb(dleyna_task_atom_t *atom,
 
 	if (failed)
 		dleyna_task_processor_cancel_queue(task->base.queue_id);
-	else if (!task->p_action)
+
+	if (!task->p_action)
 		dleyna_task_queue_task_completed(task->base.queue_id);
 }
 
