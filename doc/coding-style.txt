@@ -184,7 +184,7 @@ kernel version:
 
 You can run it on files with these options:
 
-checkpatch.pl --no-tree -f --strict --show-types --ignore NEW_TYPEDEFS
+checkpatch.pl --no-tree -f --strict --show-types --ignore NEW_TYPEDEFS --ignore CAMELCASE
 
 checkpatch.pl exceptions:
 -------------------------
