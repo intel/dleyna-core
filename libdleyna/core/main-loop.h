@@ -27,7 +27,6 @@
 #include "control-point.h"
 
 int dleyna_main_loop_start(const char *server,
-			   const char *version,
 			   const dleyna_control_point_t *control_point,
 			   gpointer user_data);
 void dleyna_main_loop_quit(void);
