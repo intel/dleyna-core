@@ -38,6 +38,7 @@ typedef void (*dleyna_control_point_free_t)(void);
 typedef const gchar *(*dleyna_control_point_server_name_t)(void);
 typedef const gchar *(*dleyna_control_point_server_introspection_t)(void);
 typedef const gchar *(*dleyna_control_point_root_introspection_t)(void);
+typedef const gchar *(*dleyna_control_point_get_version_t)(void);
 
 typedef gboolean (*dleyna_control_point_start_service_t)(
 					dleyna_connector_id_t connection);
@@ -52,6 +53,7 @@ struct dleyna_control_point_t_ {
 	dleyna_control_point_root_introspection_t root_introspection;
 	dleyna_control_point_start_service_t start_service;
 	dleyna_control_point_stop_service_t stop_service;
+	dleyna_control_point_get_version_t get_version;
 };
 
 #endif /* DLEYNA_CONTROL_POINT_H__ */
