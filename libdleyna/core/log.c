@@ -132,7 +132,7 @@ void dleyna_log_update_type_level(dleyna_log_type_t log_type, int log_level)
 	(void) setlogmask(mask);
 }
 
-void dleyna_log_init(const char *program, const char* version)
+void dleyna_log_init(const char *program, const char *version)
 {
 	int option = LOG_NDELAY | LOG_PID;
 	int old;
