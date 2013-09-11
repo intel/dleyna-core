@@ -29,10 +29,8 @@
 
 struct dleyna_settings_t_ {
 	GKeyFile *keyfile;
-	GFileMonitor *monitor;
-	gulong handler_id;
-	guint ev_id;
 	gchar *file_name;
+	gchar *file_path;
 
 	/* Global section */
 	gboolean never_quit;
@@ -64,34 +62,37 @@ struct dleyna_settings_t_ {
 #define DLEYNA_SETTINGS_DEFAULT_LOG_TYPE	DLEYNA_LOG_TYPE
 #define DLEYNA_SETTINGS_DEFAULT_LOG_LEVEL	DLEYNA_LOG_LEVEL
 
+#if DLEYNA_LOG_LEVEL & DLEYNA_LOG_LEVEL_INFO
 #define DLEYNA_SETTINGS_LOG_KEYS(sys, loc, settings) \
 do { \
 	gchar *str = NULL; \
 	\
 	DLEYNA_LOG_DEBUG_NL(); \
-	DLEYNA_LOG_INFO("Load file [%s]", loc ? loc : sys); \
+	DLEYNA_LOG_INFO("Load file [%s]", (settings)->file_path); \
 	DLEYNA_LOG_DEBUG_NL(); \
 	\
-	DLEYNA_LOG_DEBUG("[General settings]"); \
-	DLEYNA_LOG_DEBUG("Never Quit: %s", (settings)->never_quit ? "T" : "F");\
+	DLEYNA_LOG_INFO("[General settings]"); \
+	DLEYNA_LOG_INFO("Never Quit: %s", (settings)->never_quit ? "T" : "F");\
 	DLEYNA_LOG_DEBUG_NL(); \
-	DLEYNA_LOG_DEBUG("Connector Name: %s", (settings)->connector_name);\
+	DLEYNA_LOG_INFO("Connector Name: %s", (settings)->connector_name);\
 	DLEYNA_LOG_DEBUG_NL(); \
 	\
-	DLEYNA_LOG_DEBUG("[Logging settings]"); \
-	DLEYNA_LOG_DEBUG("Log Type : %d", (settings)->log_type); \
-	DLEYNA_LOG_DEBUG("Log Level: 0x%02X", (settings)->log_level); \
+	DLEYNA_LOG_INFO("[Logging settings]"); \
+	DLEYNA_LOG_INFO("Log Type : %d", (settings)->log_type); \
+	DLEYNA_LOG_INFO("Log Level: 0x%02X", (settings)->log_level); \
 	DLEYNA_LOG_DEBUG_NL(); \
 	\
 	if ((settings)->netf_entries != NULL) \
 		str = g_variant_print((settings)->netf_entries, FALSE); \
-	DLEYNA_LOG_DEBUG("[Network filtering settings]"); \
-	DLEYNA_LOG_DEBUG("Enabled : %s", (settings)->netf_enabled ? "T" : "F");\
-	DLEYNA_LOG_DEBUG("Entries: %s", str); \
+	DLEYNA_LOG_INFO("[Network filtering settings]"); \
+	DLEYNA_LOG_INFO("Enabled : %s", (settings)->netf_enabled ? "T" : "F");\
+	DLEYNA_LOG_INFO("Entries: %s", str); \
 	g_free(str); \
 	DLEYNA_LOG_DEBUG_NL(); \
 } while (0)
-
+#else
+#define DLEYNA_SETTINGS_LOG_KEYS(sys, loc, settings)
+#endif
 
 static void prv_get_keyfile_path(const gchar *file, gchar **sys_path,
 				 gchar **loc_path)
@@ -159,7 +160,8 @@ static GKeyFile *prv_load_keyfile(const gchar *filepath)
 
 	keyfile = g_key_file_new();
 
-	if (!g_key_file_load_from_file(keyfile, filepath, G_KEY_FILE_NONE,
+	if (!g_key_file_load_from_file(keyfile, filepath,
+				       G_KEY_FILE_KEEP_COMMENTS,
 				       NULL)) {
 		g_key_file_free(keyfile);
 		keyfile = NULL;
@@ -344,15 +346,20 @@ static void prv_keyfile_init(dleyna_settings_t *settings,
 			     const gchar *sys_path,
 			     const gchar *loc_path)
 {
+	const gchar *path = loc_path;
+
 	settings->keyfile = prv_load_keyfile(loc_path);
 
-	if (settings->keyfile == NULL)
+	if (settings->keyfile == NULL) {
+		path = sys_path;
 		settings->keyfile = prv_load_keyfile(sys_path);
+	}
 
 	if (settings->keyfile != NULL) {
 		prv_read_keys(settings);
 		dleyna_log_update_type_level(settings->log_type,
 					     settings->log_level);
+		settings->file_path = g_strdup(path);
 	}
 }
 
@@ -367,164 +374,9 @@ static void prv_keyfile_finalize(dleyna_settings_t *settings)
 		g_key_file_free(settings->keyfile);
 		settings->keyfile = NULL;
 	}
-}
 
-static gboolean prv_netf_entries_are_equal(GVariant *old, GVariant *new)
-{
-	gboolean match;
-	GVariantIter iter1;
-	GVariantIter iter2;
-	gchar *entry1;
-	gchar *entry2;
-
-	match = (old == new);
-
-	if (match ||
-	    ((old == NULL) && (new != NULL)) ||
-	    ((old != NULL) && (new == NULL)))
-		goto exit;
-
-	(void) g_variant_iter_init(&iter1, old);
-
-	while (g_variant_iter_next(&iter1, "&s", &entry1)) {
-		(void) g_variant_iter_init(&iter2, new);
-
-		while (g_variant_iter_next(&iter2, "&s", &entry2) && !match)
-			match = !strcmp(entry1, entry2);
-
-		if (!match)
-			break;
-	}
-
-exit:
-	return match;
-}
-
-static void prv_reload(dleyna_settings_t *settings)
-{
-	gchar *sys_path = NULL;
-	gchar *loc_path = NULL;
-	gboolean saved_netf_enabled;
-	GVariant *saved_netf_entries;
-	GVariant *netf_entries;
-
-	DLEYNA_LOG_INFO("Reload local configuration file");
-
-	/* Save all White List information */
-	saved_netf_enabled = settings->netf_enabled;
-	saved_netf_entries = settings->netf_entries;
-	/* Prevent prv_keyfile_finalize()) to free it */
-	settings->netf_entries = NULL;
-
-	prv_keyfile_finalize(settings);
-	prv_init_default(settings);
-	prv_get_keyfile_path(settings->file_name, &sys_path, &loc_path);
-
-	if (sys_path || loc_path)
-		prv_keyfile_init(settings, sys_path, loc_path);
-
-	netf_entries = settings->netf_entries;
-
-	/* FIXME: Block white list signals instead */
-	/* A little optimization hack:
-	 * 1 - Updating the wl list has no effect if the wl is disabled.
-	 * 2 - If the enabled settings has changed to disabled, apply first.
-	 * 3 - If it has changed to enabled, update the list first, then
-	 *     apply the change last.
-	 */
-	if (!settings->netf_enabled && saved_netf_enabled)
-		dleyna_white_list_enable(settings->netf_enabled, TRUE);
-
-	/* Remove old entries if new ones are different.
-	 * Don't clear() to avoid to loose entries added by a client
-	 */
-	if (!prv_netf_entries_are_equal(saved_netf_entries, netf_entries)) {
-		dleyna_white_list_remove_entries(saved_netf_entries, FALSE);
-		dleyna_white_list_add_entries(netf_entries, TRUE);
-	}
-
-	if (settings->netf_enabled && !saved_netf_enabled)
-		dleyna_white_list_enable(settings->netf_enabled, TRUE);
-
-	if (saved_netf_entries != NULL)
-		g_variant_unref(saved_netf_entries);
-
-	DLEYNA_SETTINGS_LOG_KEYS(sys_path, loc_path, settings);
-
-	g_free(sys_path);
-	g_free(loc_path);
-}
-
-static gboolean prv_monitor_timout_cb(gpointer user_data)
-{
-	dleyna_settings_t *data = (dleyna_settings_t *)user_data;
-
-	DLEYNA_LOG_INFO("Change in local settings file: Reload");
-
-	prv_reload(data);
-
-	data->ev_id = 0;
-	return FALSE;
-}
-
-static void prv_monitor_keyfile_cb(GFileMonitor *monitor,
-				   GFile *file,
-				   GFile *other_file,
-				   GFileMonitorEvent event_type,
-				   gpointer user_data)
-{
-	dleyna_settings_t *data = (dleyna_settings_t *)user_data;
-
-	switch (event_type) {
-	case G_FILE_MONITOR_EVENT_CHANGED:
-	case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
-	case G_FILE_MONITOR_EVENT_DELETED:
-	case G_FILE_MONITOR_EVENT_CREATED:
-	case G_FILE_MONITOR_EVENT_MOVED:
-		/* Reset the timer to prevent running the cb if monitoring
-		 * event are raised 1 sec after the timer has been set */
-		if (data->ev_id != 0)
-			(void) g_source_remove(data->ev_id);
-
-		data->ev_id = g_timeout_add_seconds(1,
-						    prv_monitor_timout_cb,
-						    user_data);
-		break;
-	default:
-		break;
-	}
-}
-
-static void prv_monitor_local_keyfile(dleyna_settings_t *settings,
-				      const gchar *loc_path)
-{
-	GFile *loc_file;
-	GFileMonitor *monitor = NULL;
-	gulong handler_id;
-
-	loc_file = g_file_new_for_path(loc_path);
-	monitor = g_file_monitor_file(loc_file, G_FILE_MONITOR_SEND_MOVED, NULL,
-					NULL);
-	g_object_unref(loc_file);
-
-	if (monitor != NULL) {
-		handler_id = g_signal_connect(monitor, "changed",
-				G_CALLBACK(prv_monitor_keyfile_cb),
-				settings);
-
-		settings->monitor = monitor;
-		settings->handler_id = handler_id;
-	}
-}
-
-gboolean dleyna_settings_is_never_quit(dleyna_settings_t *settings)
-{
-	return settings->never_quit;
-}
-
-const gchar *dleyna_settings_connector_name(dleyna_settings_t *settings)
-{
-	return settings->connector_name;
+	g_free(settings->file_path);
+	settings->file_path = NULL;
 }
 
 void dleyna_settings_new(const gchar *server, dleyna_settings_t **settings)
@@ -540,16 +392,15 @@ void dleyna_settings_new(const gchar *server, dleyna_settings_t **settings)
 		server_name++;
 	else
 		server_name = server;
+
 	(*settings)->file_name = g_strdup_printf("%s%s", server_name, ".conf");
 
 	prv_init_default(*settings);
 
 	prv_get_keyfile_path((*settings)->file_name, &sys_path, &loc_path);
 
-	if (loc_path) {
+	if (loc_path)
 		prv_check_local_keyfile(sys_path, loc_path);
-		prv_monitor_local_keyfile(*settings, loc_path);
-	}
 
 	if (sys_path || loc_path)
 		prv_keyfile_init(*settings, sys_path, loc_path);
@@ -562,15 +413,6 @@ void dleyna_settings_new(const gchar *server, dleyna_settings_t **settings)
 
 void dleyna_settings_delete(dleyna_settings_t *settings)
 {
-	if (settings->monitor) {
-		if (settings->handler_id)
-			g_signal_handler_disconnect(settings->monitor,
-						    settings->handler_id);
-
-		g_file_monitor_cancel(settings->monitor);
-		g_object_unref(settings->monitor);
-	}
-
 	g_free(settings->connector_name);
 	g_free(settings->file_name);
 
@@ -579,8 +421,136 @@ void dleyna_settings_delete(dleyna_settings_t *settings)
 	g_free(settings);
 }
 
-void dleyna_settings_init_white_list(dleyna_settings_t *settings)
+const gchar *dleyna_settings_connector_name(dleyna_settings_t *settings)
 {
-	dleyna_white_list_add_entries(settings->netf_entries, TRUE);
-	dleyna_white_list_enable(settings->netf_enabled, TRUE);
+	return settings->connector_name;
+}
+
+static void prv_save_settings_to_file(dleyna_settings_t *settings,
+				      GError **error)
+{
+	gchar *data;
+	gsize length;
+
+	DLEYNA_LOG_DEBUG("Enter");
+
+	data = g_key_file_to_data(settings->keyfile, &length , NULL);
+
+	DLEYNA_LOG_DEBUG_NL();
+	DLEYNA_LOG_DEBUG("\n%s", data);
+	DLEYNA_LOG_DEBUG_NL();
+
+	(void) g_file_set_contents(settings->file_path, data, length, error);
+
+	g_free(data);
+}
+
+gboolean dleyna_settings_is_never_quit(dleyna_settings_t *settings)
+{
+	return settings->never_quit;
+}
+
+void dleyna_settings_set_never_quit(dleyna_settings_t *settings,
+				    gboolean never_quit,
+				    GError **error)
+{
+	DLEYNA_LOG_DEBUG("Enter");
+
+	g_key_file_set_boolean(settings->keyfile,
+			       DLEYNA_SETTINGS_GROUP_GENERAL,
+			       DLEYNA_SETTINGS_KEY_NEVER_QUIT,
+			       never_quit);
+
+	prv_save_settings_to_file(settings, error);
+
+	if (*error == NULL)
+		settings->never_quit = never_quit;
+
+	DLEYNA_LOG_DEBUG("Exit");
+}
+
+gboolean dleyna_settings_is_white_list_enabled(dleyna_settings_t *settings)
+{
+	return settings->netf_enabled;
+}
+
+void dleyna_settings_set_white_list_enabled(dleyna_settings_t *settings,
+					    gboolean enabled,
+					    GError **error)
+{
+	DLEYNA_LOG_DEBUG("Enter");
+
+	g_key_file_set_boolean(settings->keyfile,
+			       DLEYNA_SETTINGS_GROUP_NETF,
+			       DLEYNA_SETTINGS_KEY_NETF_ENABLED,
+			       enabled);
+
+	prv_save_settings_to_file(settings, error);
+
+	if (*error == NULL)
+		settings->netf_enabled = enabled;
+
+	DLEYNA_LOG_DEBUG("Exit");
+}
+
+GVariant *dleyna_settings_white_list_entries(dleyna_settings_t *settings)
+{
+	return settings->netf_entries;
+}
+
+static const gchar **prv_filter_null_str(const gchar **orig_strv,
+					 gsize orig_len,
+					 gsize *new_len)
+{
+	const gchar **strv = NULL;
+	gsize i;
+	gsize n = 0;
+
+	if (orig_strv && orig_len) {
+		strv = g_new(const gchar *, orig_len + 1);
+
+		for (i = 0; i < orig_len; i++) {
+			if (*orig_strv[i])
+				strv[n++] = orig_strv[i];
+		}
+
+		strv[n] = NULL;
+	}
+
+	*new_len = n;
+
+	return strv;
+}
+
+void dleyna_settings_set_white_list_entries(dleyna_settings_t *settings,
+					    GVariant *entries,
+					    GError **error)
+{
+	const gchar **list;
+	gsize length;
+	const gchar **list2;
+	gsize length2;
+
+	DLEYNA_LOG_DEBUG("Enter");
+
+	list = g_variant_get_strv(entries, &length);
+
+	list2 = prv_filter_null_str(list, length, &length2);
+
+	g_key_file_set_string_list(settings->keyfile,
+				   DLEYNA_SETTINGS_GROUP_NETF,
+				   DLEYNA_SETTINGS_KEY_NETF_LIST,
+				   list2, length2);
+
+	prv_save_settings_to_file(settings, error);
+
+	if (*error == NULL) {
+		g_variant_unref(settings->netf_entries);
+		settings->netf_entries = g_variant_ref(entries);
+	}
+
+	g_free(list);
+	g_free(list2);
+
+	DLEYNA_LOG_DEBUG("Exit");
 }
