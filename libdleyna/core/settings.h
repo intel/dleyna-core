@@ -27,14 +27,33 @@
 
 typedef struct dleyna_settings_t_ dleyna_settings_t;
 
+typedef void (*dleyna_settings_reload_t)(dleyna_settings_t *new);
+
 void dleyna_settings_new(const gchar *server, dleyna_settings_t **settings);
 
 void dleyna_settings_delete(dleyna_settings_t *settings);
 
-void dleyna_settings_init_white_list(dleyna_settings_t *settings);
+void dleyna_settings_set_reload_callback(dleyna_settings_t *settings,
+					 dleyna_settings_reload_t reload_cb);
+
+const gchar *dleyna_settings_connector_name(dleyna_settings_t *settings);
 
 gboolean dleyna_settings_is_never_quit(dleyna_settings_t *settings);
 
-const gchar *dleyna_settings_connector_name(dleyna_settings_t *settings);
+void dleyna_settings_set_never_quit(dleyna_settings_t *settings,
+				    gboolean never_quit,
+				    GError **error);
+
+gboolean dleyna_settings_is_white_list_enabled(dleyna_settings_t *settings);
+
+void dleyna_settings_set_white_list_enabled(dleyna_settings_t *settings,
+					    gboolean enabled,
+					    GError **error);
+
+GVariant *dleyna_settings_white_list_entries(dleyna_settings_t *settings);
+
+void dleyna_settings_set_white_list_entries(dleyna_settings_t *settings,
+					    GVariant *entries,
+					    GError **error);
 
 #endif /* DLEYNA_SETTINGS_H__ */

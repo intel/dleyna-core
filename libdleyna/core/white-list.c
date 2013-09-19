@@ -25,7 +25,9 @@
 #include "white-list.h"
 #include "log.h"
 
-static dleyna_white_list_t g_wl_cb;
+struct dleyna_white_list_t_ {
+	GUPnPWhiteList *gupnp_wl;
+};
 
 #if DLEYNA_LOG_LEVEL & DLEYNA_LOG_LEVEL_DEBUG
 static void prv_dump_wl_entries(GUPnPWhiteList *wl)
@@ -50,76 +52,87 @@ static void prv_dump_wl_entries(GUPnPWhiteList *wl)
 }
 #endif
 
-void dleyna_white_list_enable(gboolean enabled, gboolean notify)
+dleyna_white_list_t *dleyna_white_list_new(GUPnPWhiteList *gupnp_wl)
 {
-	if (g_wl_cb.wl != NULL) {
-		gupnp_white_list_set_enabled(g_wl_cb.wl, enabled);
+	dleyna_white_list_t *wl;
+
+	if (gupnp_wl != NULL) {
+		wl =  g_new0(dleyna_white_list_t, 1);
+
+		wl->gupnp_wl = gupnp_wl;
+	} else {
+		wl = NULL;
+		DLEYNA_LOG_DEBUG("Parameter must not be NULL");
+	}
+
+
+	return wl;
+}
+
+void dleyna_white_list_delete(dleyna_white_list_t *wl)
+{
+	g_free(wl);
+}
+
+void dleyna_white_list_enable(dleyna_white_list_t *wl,
+			      gboolean enabled)
+{
+	if (wl->gupnp_wl != NULL) {
+		gupnp_white_list_set_enabled(wl->gupnp_wl, enabled);
 
 		DLEYNA_LOG_DEBUG("White List enabled: %d", enabled);
-
-		if (notify && (g_wl_cb.cb_enabled != NULL))
-			g_wl_cb.cb_enabled(g_wl_cb.user_data);
 	}
 }
 
-void dleyna_white_list_add_entries(GVariant *entries, gboolean notify)
+void dleyna_white_list_add_entries(dleyna_white_list_t *wl,
+				   GVariant *entries)
 {
 	GVariantIter viter;
 	gchar *entry;
 
-	if ((entries != NULL) && (g_wl_cb.wl != NULL)) {
+	DLEYNA_LOG_DEBUG("Enter");
+
+	if ((entries != NULL) && (wl->gupnp_wl != NULL)) {
 		(void) g_variant_iter_init(&viter, entries);
 
 		while (g_variant_iter_next(&viter, "&s", &entry))
-			(void) gupnp_white_list_add_entry(g_wl_cb.wl, entry);
+			(void) gupnp_white_list_add_entry(wl->gupnp_wl, entry);
 
 #if DLEYNA_LOG_LEVEL & DLEYNA_LOG_LEVEL_DEBUG
-		prv_dump_wl_entries(g_wl_cb.wl);
+		prv_dump_wl_entries(wl->gupnp_wl);
 #endif
-
-		if (notify && (g_wl_cb.cb_entries != NULL))
-			g_wl_cb.cb_entries(g_wl_cb.user_data);
 	}
+
+	DLEYNA_LOG_DEBUG("Exit");
 }
 
-void dleyna_white_list_remove_entries(GVariant *entries, gboolean notify)
+void dleyna_white_list_remove_entries(dleyna_white_list_t *wl,
+				      GVariant *entries)
 {
 	GVariantIter viter;
 	gchar *entry;
 
-	if ((entries != NULL) && (g_wl_cb.wl != NULL)) {
+	if ((entries != NULL) && (wl->gupnp_wl != NULL)) {
 		(void) g_variant_iter_init(&viter, entries);
 
 		while (g_variant_iter_next(&viter, "&s", &entry))
-			(void) gupnp_white_list_remove_entry(g_wl_cb.wl, entry);
+			(void) gupnp_white_list_remove_entry(wl->gupnp_wl,
+							     entry);
 
 #if DLEYNA_LOG_LEVEL & DLEYNA_LOG_LEVEL_DEBUG
-		prv_dump_wl_entries(g_wl_cb.wl);
+		prv_dump_wl_entries(wl->gupnp_wl);
 #endif
-
-		if (notify && (g_wl_cb.cb_entries != NULL))
-			g_wl_cb.cb_entries(g_wl_cb.user_data);
 	}
 }
 
-void dleyna_white_list_clear(gboolean notify)
+void dleyna_white_list_clear(dleyna_white_list_t *wl)
 {
-	if (g_wl_cb.wl != NULL) {
-		gupnp_white_list_clear(g_wl_cb.wl);
+	if (wl->gupnp_wl != NULL) {
+		DLEYNA_LOG_DEBUG("Clear white list");
+		gupnp_white_list_clear(wl->gupnp_wl);
 
 #if DLEYNA_LOG_LEVEL & DLEYNA_LOG_LEVEL_DEBUG
-		prv_dump_wl_entries(g_wl_cb.wl);
+		prv_dump_wl_entries(wl->gupnp_wl);
 #endif
-
-		if (notify && (g_wl_cb.cb_entries != NULL))
-			g_wl_cb.cb_entries(g_wl_cb.user_data);
 	}
-}
-
-void dleyna_white_list_set_info(dleyna_white_list_t *data)
-{
-	if (data != NULL)
-		memcpy(&g_wl_cb, data, sizeof(dleyna_white_list_t));
-	else
-		memset(&g_wl_cb, 0, sizeof(dleyna_white_list_t));
 }

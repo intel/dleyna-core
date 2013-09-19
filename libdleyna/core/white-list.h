@@ -26,25 +26,19 @@
 #include <glib.h>
 #include <libgupnp/gupnp-white-list.h>
 
-typedef void (*dleyna_white_list_notify_t)(gpointer user_data);
-
 typedef struct dleyna_white_list_t_ dleyna_white_list_t;
 
-struct dleyna_white_list_t_ {
-	GUPnPWhiteList *wl;
-	dleyna_white_list_notify_t cb_enabled;
-	dleyna_white_list_notify_t cb_entries;
-	gpointer user_data;
-};
+dleyna_white_list_t *dleyna_white_list_new(GUPnPWhiteList *gupnp_wl);
 
-void dleyna_white_list_enable(gboolean enabled, gboolean notify);
+void dleyna_white_list_delete(dleyna_white_list_t *wl);
 
-void dleyna_white_list_add_entries(GVariant *entries, gboolean notify);
+void dleyna_white_list_enable(dleyna_white_list_t *wl, gboolean enabled);
 
-void dleyna_white_list_remove_entries(GVariant *entries, gboolean notify);
+void dleyna_white_list_add_entries(dleyna_white_list_t *wl, GVariant *entries);
 
-void dleyna_white_list_clear(gboolean notify);
+void dleyna_white_list_remove_entries(dleyna_white_list_t *wl,
+				      GVariant *entries);
 
-void dleyna_white_list_set_info(dleyna_white_list_t *data);
+void dleyna_white_list_clear(dleyna_white_list_t *wl);
 
 #endif /* DLEYNA_WHITE_LIST_H__ */
