@@ -58,6 +58,6 @@ void dleyna_service_task_cancel_cb(dleyna_task_atom_t *atom,
 void dleyna_service_task_delete_cb(dleyna_task_atom_t *atom,
 				   gpointer user_data);
 
-gpointer *dleyna_service_task_get_user_data(dleyna_service_task_t *task);
+gpointer dleyna_service_task_get_user_data(dleyna_service_task_t *task);
 
 #endif /* DLEYNA_SERVICE_TASK_H__ */

@@ -27,7 +27,7 @@ typedef struct dleyna_task_queue_key_t_ dleyna_task_queue_key_t;
 
 struct dleyna_task_atom_t_ {
 	const dleyna_task_queue_key_t *queue_id;
-};
+} __attribute__((aligned));
 typedef struct dleyna_task_atom_t_ dleyna_task_atom_t;
 
 #endif /* DLEYNA_TASK_ATOM_H__ */
