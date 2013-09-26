@@ -125,7 +125,7 @@ void dleyna_service_task_delete_cb(dleyna_task_atom_t *atom, gpointer user_data)
 	g_free(task);
 }
 
-gpointer *dleyna_service_task_get_user_data(dleyna_service_task_t *task)
+gpointer dleyna_service_task_get_user_data(dleyna_service_task_t *task)
 {
 	return task->user_data;
 }
