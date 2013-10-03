@@ -2,7 +2,7 @@ libdleyna_coreincdir = $(includedir)/dleyna-1.0/libdleyna/core
 connectordir = $(libdir)/dleyna-1.0/connectors
 sysconfigdir = $(sysconfdir)
 
-DLEYNA_CORE_VERSION = 2:0:1
+DLEYNA_CORE_VERSION = 3:0:0
 
 AM_CFLAGS =	$(GLIB_CFLAGS)				\
 		$(GIO_CFLAGS)				\

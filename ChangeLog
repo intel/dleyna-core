@@ -1,3 +1,10 @@
+version 0.4.0
+	- Logs: print correct service name & version
+	- Fix a bug in the task queue cancellation
+	- Update coding style documentation
+	- Settings: new APIs to save quit and white list options
+	- Remove settings file monitoring 
+
 version 0.2.2
 	- Change connector publish_object() signature
 	- Add network filtering support
