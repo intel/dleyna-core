@@ -37,6 +37,8 @@ gboolean dleyna_settings_is_never_quit(dleyna_settings_t *settings);
 
 guint dleyna_settings_port(dleyna_settings_t *settings);
 
+guint dleyna_settings_push_host_port(dleyna_settings_t *settings);
+
 void dleyna_settings_set_never_quit(dleyna_settings_t *settings,
 				    gboolean never_quit,
 				    GError **error);
