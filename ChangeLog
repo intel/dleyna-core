@@ -1,3 +1,13 @@
+version 0.5.0
+	- [m4] Don't use bash arrays in m4 macros
+	  https://github.com/01org/dleyna-core/issues/41
+	- [Autoconf] Add --no-undefined to compiler option
+	  https://github.com/01org/dleyna-core/issues/33
+    - [settings] Add "push-host-port" setting
+	- [settings] Add "port" setting
+    - [Warnings] Fix compile warnings on ARM
+	  Partial fix for https://github.com/01org/dleyna-renderer/issues/137
+
 version 0.4.0
 	- Logs: print correct service name & version
 	- Fix a bug in the task queue cancellation
