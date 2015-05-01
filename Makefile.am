@@ -19,6 +19,7 @@ lib_LTLIBRARIES = libdleyna-core-1.0.la
 libdleyna_coreinc_HEADERS = 	libdleyna/core/connector.h	\
 				libdleyna/core/connector-mgr.h	\
 				libdleyna/core/control-point.h	\
+				libdleyna/core/core.h		\
 				libdleyna/core/error.h		\
 				libdleyna/core/log.h		\
 				libdleyna/core/main-loop.h	\
@@ -34,6 +35,7 @@ libdleyna_core_1_0_la_LDFLAGS =	-version-info $(DLEYNA_CORE_VERSION) \
 
 libdleyna_core_1_0_la_SOURCES =	$(libdleyna_coreinc_HEADERS)	\
 				libdleyna/core/connector-mgr.c	\
+				libdleyna/core/core.c		\
 				libdleyna/core/error.c		\
 				libdleyna/core/log.c		\
 				libdleyna/core/main-loop.c	\
