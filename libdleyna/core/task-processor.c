@@ -257,6 +257,7 @@ void dleyna_task_processor_set_quitting(dleyna_task_processor_t *processor)
 		g_idle_add(processor->on_quit_cb, NULL);
 
 	prv_cancel_all_queues(processor);
+	g_hash_table_remove_all(processor->task_queues);
 
 	DLEYNA_LOG_DEBUG("Exit");
 }
@@ -460,6 +461,7 @@ void dleyna_task_queue_task_completed(const dleyna_task_queue_key_t *queue_id)
 
 	if (processor->quitting && !processor->running_tasks) {
 		g_idle_add(processor->on_quit_cb, NULL);
+		g_hash_table_remove_all(processor->task_queues);
 	} else if (queue->defer_remove) {
 		DLEYNA_LOG_DEBUG("Removing queue <%s,%s>",
 				 queue_id->source, queue_id->sink);
