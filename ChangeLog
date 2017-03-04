@@ -1,11 +1,24 @@
+version 0.6.0
+	- Merge pull request #43
+	- Added new core.c and core.h to add new function dleyna_core_prv_conve
+	- Added new core.c and core.h to Makefile.am
+	- [m4] Don't use bash "let" builtin
+	- [m4] Use AS_VAR_APPEND macro instead of "+="
+	  Merge pull request #45
+	- Don't schedule dleyna_task_processor_t->on_quit_cb more than once
+	- Remove all queues before dleyna_task_processor_t->on_quit_cb is run
+	  Merge pull request #48
+	  Merge pull request #49
+	- Changed the Copyright to 2017
+
 version 0.5.0
 	- [m4] Don't use bash arrays in m4 macros
 	  https://github.com/01org/dleyna-core/issues/41
 	- [Autoconf] Add --no-undefined to compiler option
 	  https://github.com/01org/dleyna-core/issues/33
-    - [settings] Add "push-host-port" setting
+	- [settings] Add "push-host-port" setting
 	- [settings] Add "port" setting
-    - [Warnings] Fix compile warnings on ARM
+	- [Warnings] Fix compile warnings on ARM
 	  Partial fix for https://github.com/01org/dleyna-renderer/issues/137
 
 version 0.4.0
