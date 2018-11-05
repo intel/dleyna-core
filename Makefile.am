@@ -65,5 +65,7 @@ pkgconfig_DATA = dleyna-core-1.0.pc
 CLEANFILES = $(pkgconfig_DATA)
 DISTCLEANFILES = $(pkgconfig_DATA)
 
+EXTRA_DIST = meson.build meson_options.txt libdleyna/meson.build libdleyna/core/meson.build
+
 maintainer-clean-local:
 	rm -rf build-aux
