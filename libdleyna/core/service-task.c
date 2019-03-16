@@ -103,6 +103,7 @@ void dleyna_service_task_cancel_cb(dleyna_task_atom_t *atom, gpointer user_data)
 
 	if (task->p_action) {
 		if (task->proxy)
+			// TODO: switch to GCancellable
 			gupnp_service_proxy_cancel_action(task->proxy,
 							  task->p_action);
 		task->p_action = NULL;
