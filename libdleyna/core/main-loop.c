@@ -128,6 +128,10 @@ int dleyna_main_loop_start(const char *server,
 {
 	int retval = 1;
 
+#if !GLIB_CHECK_VERSION(2, 35, 0)
+	g_type_init();
+#endif
+
 	dleyna_log_init(server, control_point->get_version());
 
 	if (!prv_context_init(server, control_point))
