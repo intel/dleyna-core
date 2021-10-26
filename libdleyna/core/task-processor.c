@@ -202,9 +202,8 @@ static gboolean prv_cancel_only(const dleyna_task_queue_key_t *queue_id,
 	if (task_queue->current_task)
 		task_queue->task_cancel_cb(task_queue->current_task,
 					   task_queue->user_data);
-	else
-		remove_queue = task_queue->flags &
-			DLEYNA_TASK_QUEUE_FLAG_AUTO_REMOVE;
+
+	remove_queue = task_queue->flags & DLEYNA_TASK_QUEUE_FLAG_AUTO_REMOVE;
 
 out:
 
@@ -446,6 +445,7 @@ void dleyna_task_queue_task_completed(const dleyna_task_queue_key_t *queue_id)
 {
 	dleyna_task_queue_t *queue;
 	dleyna_task_processor_t *processor = queue_id->processor;
+	gboolean current_task_was_cancelled = FALSE;
 
 	DLEYNA_LOG_DEBUG("Enter - Task completed for queue <%s,%s>",
 			 queue_id->source, queue_id->sink);
@@ -453,11 +453,15 @@ void dleyna_task_queue_task_completed(const dleyna_task_queue_key_t *queue_id)
 	queue = g_hash_table_lookup(processor->task_queues, queue_id);
 
 	if (queue->current_task) {
+		current_task_was_cancelled = queue->cancelled;
 		queue->task_delete_cb(queue->current_task, queue->user_data);
 		queue->current_task = NULL;
 	}
 
 	processor->running_tasks--;
+
+	if (current_task_was_cancelled)
+		goto out;
 
 	if (processor->quitting && !processor->running_tasks) {
 		g_idle_add(processor->on_quit_cb, NULL);
@@ -475,6 +479,7 @@ void dleyna_task_queue_task_completed(const dleyna_task_queue_key_t *queue_id)
 		g_hash_table_remove(processor->task_queues, queue_id);
 	}
 
+out:
 	DLEYNA_LOG_DEBUG("Exit");
 }
 
